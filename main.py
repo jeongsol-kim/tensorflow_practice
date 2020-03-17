@@ -1,41 +1,30 @@
-import tensorflow as tf
 from tensorflow import keras
-import numpy as np
-import matplotlib.pyplot as plt
+from network import Network
+from data_preparation import DataPreparation
+import tensorflow as tf, numpy as np, matplotlib.pyplot as plt, argparse
 
-fashion_mnist = keras.datasets.fashion_mnist
-(train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
+# ------ HYPER PARAMETERS ------ #
+data_dir = '/home/bispl/바탕화면/super-res-cycleGAN/data/2DHD/'
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('--TRAIN_INPUT_DIR', dest='TRAIN_INPUT_DIR', default=data_dir + '2DHD_Train.tif')
+parser.add_argument('--TRAIN_LABEL_DIR', dest='TRAIN_LABEL_DIR', default=data_dir + '2DHD_Train_Label.tif')
+parser.add_argument('--TEST_INPUT_DIR', dest='TEST_INPUT_DIR', default=data_dir + '2DHD_Train_Label.tif')
+parser.add_argument('--CKP_DIR', dest='CKP_DIR', default='../model/')
+parser.add_argument('--LOG_DIR', dest='LOG_DIR', default='../log/fit/')
+parser.add_argument('--IMG_SIZE', dest='IMG_SIZE', type=int, default=512)
+parser.add_argument('--PATCH_SIZE', dest='PATCH_SIZE', type=int, default=64)
+parser.add_argument('--BATCH_SIZE', dest='BATCH_SIZE', type=int, default=50)
+parser.add_argument('--LEARNING_RATE', dest='LEARNING_RATE', type=float, default=0.0004)
 
-print("train data shape: " , np.shape(train_images))
-print("test data shape: ", np.shape(test_images))
+args, unknown = parser.parse_known_args()
 
-'''
-plt.figure(1)
-for i in range(3):
-    for j in range(3):
-        plt.subplot(3, 3, i*3+j+1)
-        plt.imshow(train_images[i*3+j+1,:,:])
-        plt.colorbar()
-plt.show()
-'''
+# ------ DATA LOADING & PRE-PROCESS------ #
+DP = DataPreparation()
+DP.read_data(args.TRAIN_INPUT_DIR)
+DP.scale_normalization(DP.raw_data)
 
-class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',
-               'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
+(train_dataset, train_label),(test_dataset, test_label) = DP.data_separation(DP.scaled_data, 450, 50)
 
-# preprocessing
-train_images = train_images/255.0
-test_images = test_images/255.0
-
-# make model
-model = keras.Sequential([
-    keras.layers.Flatten(input_shape=(28,28)),
-    keras.layers.Dense(128, activation='relu'),
-    keras.layers.Dense(10, activation='softmax')
-])
-
-model.compile(optimizer = 'adam', loss='sparse_categorical_crossentropy',metrics=['accuracy'])
-model.fit(train_images,train_labels,epochs=10)
-
-test_loss, test_acc = model.evaluate(test_images,test_labels,verbose = 2)
-
-
+Unet = Network(args)
+result = Unet.model(np.expand_dims(train_dataset, 3), training=False)
+print(np.shape(result))
