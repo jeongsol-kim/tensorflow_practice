@@ -1,4 +1,4 @@
-from data_utils import *
+from Unet.data_utils import *
 import random
 
 
@@ -22,6 +22,7 @@ class DataPreparation:
 
         self.scaled_data = temp
 
+    # This should be changed to become more reasonable.
     def data_separation(self, input_image, label_image, train_num, test_num, shuffle=True):
         total_num = np.shape(input_image)[0]
         if total_num < train_num + test_num:
@@ -37,7 +38,7 @@ class DataPreparation:
             train_set = input_image[ref_list[0:train_num], :, :]
             test_set = input_image[ref_list[train_num:train_num+test_num], :, :]
             train_label_set = label_image[ref_list[0:train_num], :, :]
-            test_label_Set = label_image[ref_list[train_num:train_num+test_num], :, :]
+            test_label_set = label_image[ref_list[train_num:train_num+test_num], :, :]
 
         elif len(np.shape(input_image)) == 4:
             train_set = input_image[ref_list[0:train_num], :, :, :]

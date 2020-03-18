@@ -1,5 +1,7 @@
-#from tensorflow import keras
-import tensorflow as tf, numpy as np, unet_block
+# from tensorflow import keras
+import tensorflow as tf
+from Unet import unet_block
+
 
 class Network:
     def __init__(self, args, arch ='Unet'):
@@ -20,14 +22,14 @@ class Network:
             down_stack = [
                 unet_block.down_flow(self.IFS, 3), # 64
                 unet_block.down_flow(self.IFS, 3, apply_pooling=True), # 32
-                unet_block.down_flow(self.IFS*2, 3), # 32
-                unet_block.down_flow(self.IFS*2, 3, apply_pooling=True), # 16
-                unet_block.down_flow(self.IFS*4, 3), # 16
-                unet_block.down_flow(self.IFS*4, 3, apply_pooling=True), # 8
-                unet_block.down_flow(self.IFS*8, 3), # 8
-                unet_block.down_flow(self.IFS*8, 3, apply_pooling=True), # 4
-                unet_block.down_flow(self.IFS*16, 3), # 4
-                unet_block.down_flow(self.IFS*16, 3) # 4
+                unet_block.down_flow(self.IFS * 2, 3), # 32
+                unet_block.down_flow(self.IFS * 2, 3, apply_pooling=True), # 16
+                unet_block.down_flow(self.IFS * 4, 3), # 16
+                unet_block.down_flow(self.IFS * 4, 3, apply_pooling=True), # 8
+                unet_block.down_flow(self.IFS * 8, 3), # 8
+                unet_block.down_flow(self.IFS * 8, 3, apply_pooling=True), # 4
+                unet_block.down_flow(self.IFS * 16, 3), # 4
+                unet_block.down_flow(self.IFS * 16, 3) # 4
             ]
 
             up_stack = [
@@ -55,7 +57,7 @@ class Network:
 
             for up, skip in zip(up_stack, skips): #['8',8,'16',16,'32',32,'64',64]
                 x = up(x)
-                if 'conv2d_transpose' in [layer.name for layer in up.layers]:
+                if [layer.name for layer in up.layers if layer.name.startswith('conv2d_transpose')]:
                     x = tf.keras.layers.Concatenate()([x, skip])
 
             x = last(x)
