@@ -52,5 +52,12 @@ class DataPreparation:
 
         return (train_set, train_label_set),(test_set, test_label_set)
 
+    def separate_into_patch_set(self, img, patch_size, patch_stride, batch_size):
+        patch_set = tf.image.extract_patches(img, [1, patch_size, patch_size, 1],[1, patch_stride, patch_stride, 1],
+                                             [1, 1, 1, 1], padding='VALID')
+        re_patch_set = tf.reshape(patch_set,
+                                     [np.shape(img)[0] * patch_set.get_shape()[1] * patch_set.get_shape()[2],
+                                      patch_size, patch_size, np.shape(img)[-1]])
 
+        return re_patch_set, patch_set.get_shape()[1], patch_set.get_shape()[2]
 

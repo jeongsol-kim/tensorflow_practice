@@ -31,3 +31,28 @@ def up_flow(filters, size, stride=1, apply_transpose=False):
 
     return result
 
+def make_down_stack(IFS):
+    return [
+                down_flow(IFS, 3), # 64
+                down_flow(IFS, 3, apply_pooling=True), # 32
+                down_flow(IFS * 2, 3), # 32
+                down_flow(IFS * 2, 3, apply_pooling=True), # 16
+                down_flow(IFS * 4, 3), # 16
+                down_flow(IFS * 4, 3, apply_pooling=True), # 8
+                down_flow(IFS * 8, 3), # 8
+                down_flow(IFS * 8, 3, apply_pooling=True), # 4
+                down_flow(IFS * 16, 3), # 4
+                down_flow(IFS * 16, 3) # 4
+            ]
+
+def make_up_stack(IFS):
+    return [
+                up_flow(IFS * 8, 2, apply_transpose=True), # 8
+                up_flow(IFS * 8, 2), # 8
+                up_flow(IFS * 4, 2, apply_transpose=True), # 16
+                up_flow(IFS * 4, 2), # 16
+                up_flow(IFS * 2, 2, apply_transpose=True), # 32
+                up_flow(IFS * 2, 2), # 32
+                up_flow(IFS * 1, 2, apply_transpose=True), # 64
+                up_flow(IFS * 1, 2) # 64
+            ]
