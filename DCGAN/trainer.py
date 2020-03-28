@@ -70,11 +70,11 @@ class Trainer():
             print('Time for epoch {} is {} sec'.format(epoch + 1, time.time() - start_time))
             print('Generator Loss: {} / Discriminator Loss: {}'.format(sum(avg_gen_loss)/len(avg_gen_loss),
                                                                        sum(avg_dis_loss)/len(avg_dis_loss)))
-            print('Discriminator score for Real: {} / Fake: {}'.format(real_score, fake_score))
+            print('Discriminator score for Real: {} / Fake: {}'.format(np.mean(real_score), np.mean(fake_score)))
 
             # write on tensorboard.
             self.make_summaries(sum(avg_gen_loss)/len(avg_gen_loss), sum(avg_dis_loss)/len(avg_dis_loss),
-                                real_score, fake_score, epoch)
+                                np.mean(real_score), np.mean(fake_score), epoch)
 
             # save the model as checkpoint.
             if (epoch + 1) % 15 == 0:
@@ -82,7 +82,7 @@ class Trainer():
 
         self.generate_and_save_images(self.network.g_model, epochs, self.seed)
         self.make_summaries(sum(avg_gen_loss) / len(avg_gen_loss), sum(avg_dis_loss) / len(avg_dis_loss),
-                            real_score, fake_score, epochs)
+                            np.mean(real_score), np.mean(fake_score), epochs)
 
     def make_summaries(self, gloss, dloss, rscore, fscore, epoch):
         with self.train_gloss_writer.as_default():
