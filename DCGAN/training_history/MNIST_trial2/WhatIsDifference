@@ -1,0 +1,8 @@
+Delete 'BN' layers from Discriminator
+
+* Does not change:
+Generator uses
+conv2D_transpose - BN - Relu
+
+Discriminator uses
+conv2D - Relu

@@ -1,0 +1,8 @@
+Use ReLU instead LeakyReLU in generator.
+Add dropout (with p=0.3) layers in discriminator
+
+* Does not change:
+Generator uses
+conv2D_transpose - BN - {}
+Discriminator uses
+conv2D - Relu - {}

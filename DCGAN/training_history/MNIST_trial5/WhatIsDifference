@@ -1,0 +1,10 @@
+delete avtivation function (sigmoid) from the last layer of discriminator.
+
+* Does not change:
+Generator uses
+conv2D_transpose - BN - Relu
+Discriminator uses
+conv2D - Relu - Dropout(0.3)
+
+
+Success!

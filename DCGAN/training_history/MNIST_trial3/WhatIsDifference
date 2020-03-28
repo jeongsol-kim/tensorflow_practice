@@ -1,0 +1,8 @@
+Use LeakyReLU instead ReLU in generator.
+
+* Does not change:
+Generator uses
+conv2D_transpose - BN - {}
+
+Discriminator uses
+conv2D - Relu
