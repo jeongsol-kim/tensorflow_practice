@@ -12,18 +12,18 @@ class DataLoader():
 
     def batch_preparing(self, train_num = 0, test_num = 5000):
         self.label_data = self.data.reshape(self.data.shape[0], 28, 28, 1).astype('float32')
-        self.label_data = (self.label_data - 127.5) / 127.5
+        self.label_data = self.label_data / 255.0
         if train_num != 0:
             self.train_label_data = self.label_data[:train_num, :, :, :]
-            self.train_noise_data = self.noise_helper.make_noise(self.train_label_data, features=[0, 0.05])
+            self.train_noise_data = self.noise_helper.make_noise(self.train_label_data, features=[0, 0.05]).astype('float32')
         else:
             self.train_label_data = self.label_data[:-test_num, :, :, :]
-            self.train_noise_data = self.noise_helper.make_noise(self.train_label_data, features=[0, 0.05])
+            self.train_noise_data = self.noise_helper.make_noise(self.train_label_data, features=[0, 0.05]).astype('float32')
 
 
         # Add different noise with training dataset.
         self.test_label_data = self.label_data[train_num:train_num+test_num, :, :, :]
-        self.test_noise_data = self.noise_helper.make_noise(self.test_label_data, features=[0, 0.05])
+        self.test_noise_data = self.noise_helper.make_noise(self.test_label_data, features=[0, 0.05]).astype('float32')
 
         self.train_label_data = tf.data.Dataset.from_tensor_slices(self.train_label_data).batch(self.BATCH_SIZE)
         self.train_noise_data = tf.data.Dataset.from_tensor_slices(self.train_noise_data).batch(self.BATCH_SIZE)

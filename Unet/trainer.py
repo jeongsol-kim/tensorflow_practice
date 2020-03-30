@@ -15,7 +15,7 @@ class Trainer():
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
         self.checkpoint = tf.train.Checkpoint(optimizer=self.network.optimizer, Unet=self.network.model)
 
-        self.summary_log_dir = './training_log/train1'
+        self.summary_log_dir = './training_log/train4'
         self.train_loss_writer = tf.summary.create_file_writer(self.summary_log_dir + '/train/loss')
         self.test_loss_writer = tf.summary.create_file_writer(self.summary_log_dir + '/test/loss')
         self.train_psnr_writer = tf.summary.create_file_writer(self.summary_log_dir + '/train/psnr')
@@ -29,6 +29,8 @@ class Trainer():
     def train_step(self, batch_image, label_image):
         with tf.GradientTape() as grad_tape:
             output_image = self.network.model(batch_image, training=True)
+
+            #
             loss = self.network.l2_loss(output_image, label_image)
             psnr = self.PSNR(output_image, label_image)
 
@@ -53,7 +55,7 @@ class Trainer():
                 avg_psnr.append(psnr)
 
             # print training information.
-            print('Time for epoch {} is {} sec'.format(epoch + 1, time.time() - start_time))
+            print('Time for epoch {} is {} min'.format(epoch + 1, (time.time() - start_time)/60.0))
             print('Loss : {} / PSNR : {}'.format(sum(avg_loss)/len(avg_loss), sum(avg_psnr)/len(avg_psnr)))
 
             # write on tensorboard.
@@ -86,9 +88,6 @@ class Trainer():
 
         self.make_summaries(sum(avg_loss) / len(avg_loss), sum(avg_psnr) / len(avg_psnr), epoch, training=False)
 
-
-
-
     def make_summaries(self, loss, psnr, epoch, training=True):
         if training:
             with self.train_loss_writer.as_default():
@@ -105,21 +104,26 @@ class Trainer():
         predictions = model(test_input, training=False)
 
         plt.figure()
-        plt.subplot(4,3,1)
+        plt.subplot(4,4,1)
         plt.title('Noisy input')
-        plt.subplot(4,3,2)
+        plt.subplot(4,4,2)
         plt.title('Network output')
-        plt.subplot(4,3,3)
+        plt.subplot(4,4,3)
+        plt.title('Filtered noise')
+        plt.subplot(4,4,4)
         plt.title('Clear label')
 
         for i in range(predictions.shape[0]):
-            plt.subplot(4, 3, i*3 + 1)
+            plt.subplot(4, 4, i*4 + 1)
             plt.imshow(test_input[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
             plt.axis('off')
-            plt.subplot(4, 3, i*3 + 2)
+            plt.subplot(4, 4, i*4 + 2)
             plt.imshow(predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
             plt.axis('off')
-            plt.subplot(4, 3, i*3 + 3)
+            plt.subplot(4, 4, i*4 + 3)
+            plt.imshow(test_input[i, :, :, 0] * 127.5 + 127.5 - predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
+            plt.axis('off')
+            plt.subplot(4, 4, i*4 + 4)
             plt.imshow(test_label[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
             plt.axis('off')
 

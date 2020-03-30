@@ -2,7 +2,7 @@ import tensorflow as tf
 
 def addNpass_conv_block(x, output_ch, BN=True, Relu=True):
     block = tf.keras.Sequential()
-    block.add(tf.keras.layers.Conv2D(output_ch, (5, 5), (1, 1), padding='same', use_bias=False))
+    block.add(tf.keras.layers.Conv2D(output_ch, (3, 3), (1, 1), padding='same', use_bias=False))
     if BN: block.add(tf.keras.layers.BatchNormalization())
     if Relu: block.add(tf.keras.layers.ReLU())
     return block(x)
