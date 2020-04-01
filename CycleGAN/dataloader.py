@@ -1,52 +1,65 @@
 import tensorflow as tf
-import tensorflow_datasets as tdf
+import tensorflow_datasets as tfd
+import CycleGAN.hyperparams as hp
 import numpy as np
 import matplotlib.pyplot as plt
 from Unet.noise_helper import NoiseHelper
 
 class DataLoader():
-    def __init__(self):
-        (self.data, _), _ = tf.keras.datasets.mnist.load_data()
-        self.BUFFER_SIZE = np.shape(self.data)[0]
-        self.BATCH_SIZE = 256
-        self.noise_helper = NoiseHelper()
+    def __init__(self, patch=False):
+        self.monet_train = tfd.load(name='cycle_gan/monet2photo', split='trainA')
+        self.pic_train = tfd.load(name='cycle_gan/monet2photo', split='trainB')
+        self.monet_test = tfd.load(name='cycle_gan/monet2photo', split='testA')
+        self.pic_test = tfd.load(name='cycle_gan/monet2photo', split='testB')
 
-    def batch_preparing(self, train_num = 0, test_num = 5000):
-        self.label_data = self.data.reshape(self.data.shape[0], 28, 28, 1).astype('float32')
-        self.label_data = self.label_data / 255.0
-        if train_num != 0:
-            self.train_label_data = self.label_data[:train_num, :, :, :]
-            self.train_noise_data = self.noise_helper.make_noise(self.train_label_data, features=[0, 0.05]).astype('float32')
-        else:
-            self.train_label_data = self.label_data[:-test_num, :, :, :]
-            self.train_noise_data = self.noise_helper.make_noise(self.train_label_data, features=[0, 0.05]).astype('float32')
+        self.PATCH_SIZE = hp.PATCH_SIZE
+        self.IsPatchBased = patch
+        self.BATCH_SIZE = hp.BATCH_SIZE
+
+    def batch_preparing(self, limit = 0):
+        # Extract images
+        self.monet_train = tf.convert_to_tensor([x['image'] for x in self.monet_train], dtype=tf.float32)/255.0
+        self.pic_train = tf.convert_to_tensor([x['image'] for x in self.pic_train], dtype=tf.float32)/255.0
+        self.monet_test = tf.convert_to_tensor([x['image'] for x in self.monet_test], dtype=tf.float32)/255.0
+        self.pic_test = tf.convert_to_tensor([x['image'] for x in self.pic_test], dtype=tf.float32)/255.0
+
+        if limit != 0:
+            self.monet_train = self.monet_train[:limit, :, :, :]
+            self.pic_train = self.monet_train[:limit, :, :, :]
+            self.monet_test = self.monet_test[:limit, :, :, :]
+            self.pic_test = self.pic_test[:limit, :, :, :]
+
+        # If the training is patch-based, separate dataset into patches.
+        if self.IsPatchBased:
+            self.monet_train = self.patch_separating(self.monet_train)
+            self.pic_train = self.patch_separating(self.pic_train)
+            self.monet_test = self.patch_separating(self.monet_test)
+            self.pic_test = self.patch_separating(self.pic_test)
+
+        # Convert data tensor into Dataset class and shuffle & make batch.
+        self.monet_train = tf.data.Dataset.from_tensor_slices(self.monet_train).\
+            shuffle(self.monet_train.get_shape()[0], reshuffle_each_iteration=True)
+
+        self.pic_train = tf.data.Dataset.from_tensor_slices(self.pic_train).\
+            shuffle(self.pic_train.get_shape()[0], reshuffle_each_iteration=True)
+
+        self.monet_test = tf.data.Dataset.from_tensor_slices(self.monet_test).\
+            shuffle(self.monet_test.get_shape()[0], reshuffle_each_iteration=False)
+
+        self.pic_test = tf.data.Dataset.from_tensor_slices(self.pic_test).\
+            shuffle(self.pic_test.get_shape()[0], reshuffle_each_iteration=False)
+
+        self.train_zipped = tf.data.Dataset.zip((self.monet_train, self.pic_train)).batch(self.BATCH_SIZE)
+        self.test_zipped = tf.data.Dataset.zip((self.monet_test, self.pic_test)).batch(self.BATCH_SIZE)
 
 
-        # Add different noise with training dataset.
-        self.test_label_data = self.label_data[train_num:train_num+test_num, :, :, :]
-        self.test_noise_data = self.noise_helper.make_noise(self.test_label_data, features=[0, 0.05]).astype('float32')
+    def patch_separating(self, image):
+        patch_set = tf.image.extract_patches(image, [1, self.PATCH_SIZE, self.PATCH_SIZE, 1],
+                                             [1, self.PATCH_SIZE, self.PATCH_SIZE, 1], [1, 1, 1, 1], padding='VALID')
 
-        self.train_label_data = tf.data.Dataset.from_tensor_slices(self.train_label_data).batch(self.BATCH_SIZE)
-        self.train_noise_data = tf.data.Dataset.from_tensor_slices(self.train_noise_data).batch(self.BATCH_SIZE)
-        self.test_label_data = tf.data.Dataset.from_tensor_slices(self.test_label_data).batch(self.BATCH_SIZE)
-        self.test_noise_data = tf.data.Dataset.from_tensor_slices(self.test_noise_data).batch(self.BATCH_SIZE)
+        patch_set = tf.reshape(patch_set,
+                               [patch_set.get_shape()[1] * patch_set.get_shape()[2] * image.get_shape()[0],
+                                self.PATCH_SIZE, self.PATCH_SIZE, 3])
 
-        self.train_zipped = tf.data.Dataset.zip((self.train_label_data, self.train_noise_data))
-        self.test_zipped = tf.data.Dataset.zip((self.test_label_data, self.test_noise_data))
-
-        self.train_zipped = self.train_zipped.shuffle(self.BUFFER_SIZE, reshuffle_each_iteration=True)
-        self.test_zipped = self.test_zipped.shuffle(self.BUFFER_SIZE, reshuffle_each_iteration=False)
-
-        '''
-        for i, j in self.zipped:
-            print(np.shape(i)==np.shape(j))
-  
-        plt.figure()
-        plt.subplot(1,2,1)
-        plt.imshow(i[0,:,:,0], cmap='gray')
-        plt.subplot(1,2,2)
-        plt.imshow(j[0,:,:,0],cmap='gray')
-        plt.show()
-        '''
-
+        return patch_set
 

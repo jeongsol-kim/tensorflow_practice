@@ -15,7 +15,7 @@ class Trainer():
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
         self.checkpoint = tf.train.Checkpoint(optimizer=self.network.optimizer, Unet=self.network.model)
 
-        self.summary_log_dir = './training_log/train4'
+        self.summary_log_dir = './training_log/train5'
         self.train_loss_writer = tf.summary.create_file_writer(self.summary_log_dir + '/train/loss')
         self.test_loss_writer = tf.summary.create_file_writer(self.summary_log_dir + '/test/loss')
         self.train_psnr_writer = tf.summary.create_file_writer(self.summary_log_dir + '/train/psnr')

@@ -12,7 +12,7 @@ class Unet():
         return self.model(input, training=False)
 
     def create(self):
-        self.model = tf.keras.Sequential()
+        #self.model = tf.keras.Sequential()
         input = tf.keras.layers.Input(shape=(28, 28, 1), dtype=tf.float32)
         x = input
         x, skip_layers = self.addNpass_down_path(x)
