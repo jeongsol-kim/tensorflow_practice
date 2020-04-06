@@ -103,29 +103,23 @@ class Trainer():
     def generate_and_save_images(self, model, epoch, test_input, test_label):
         predictions = model(test_input, training=False)
 
-        plt.figure()
-        plt.subplot(4,4,1)
-        plt.title('Noisy input')
-        plt.subplot(4,4,2)
-        plt.title('Network output')
-        plt.subplot(4,4,3)
-        plt.title('Filtered noise')
-        plt.subplot(4,4,4)
-        plt.title('Clear label')
-
         for i in range(predictions.shape[0]):
             plt.subplot(4, 4, i*4 + 1)
             plt.imshow(test_input[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
             plt.axis('off')
+            if i == 0: plt.title('Noisy input')
             plt.subplot(4, 4, i*4 + 2)
             plt.imshow(predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
             plt.axis('off')
+            if i == 0: plt.title('Network output')
             plt.subplot(4, 4, i*4 + 3)
             plt.imshow(test_input[i, :, :, 0] * 127.5 + 127.5 - predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
             plt.axis('off')
+            if i == 0: plt.title('Filtered noise')
             plt.subplot(4, 4, i*4 + 4)
             plt.imshow(test_label[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
             plt.axis('off')
+            if i == 0: plt.title('Clear label')
 
         plt.tight_layout()
         plt.savefig('./training_history/image_at_epoch_{:04d}.png'.format(epoch))

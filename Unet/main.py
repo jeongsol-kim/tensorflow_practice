@@ -7,7 +7,7 @@ from Unet.trainer import Trainer
 
 # Data loading
 loader = DataLoader()
-loader.batch_preparing(50, 10)
+loader.batch_preparing()
 
 # Network creation
 network = Unet()
@@ -16,7 +16,7 @@ network = Unet()
 trainer = Trainer(network)
 
 # Training
-trainer.train(loader.train_zipped, loader.test_zipped, 1)
+trainer.train(loader.train_zipped, loader.test_zipped, 20)
 
 # make gif file.
 trainer.make_train_history_gif()

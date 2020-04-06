@@ -29,47 +29,47 @@ class Unet():
     def addNpass_down_path(self, x):
         skip_layer = []
 
-        x = addNpass_conv_block(x, 64)
-        assert tuple(x.shape) == (None, 28, 28, 64)
-        skip_layer.append(x)
-
-        x = addNpass_maxpooling(x)
-        assert tuple(x.shape) == (None, 14, 14, 64)
-
         x = addNpass_conv_block(x, 128)
-        assert tuple(x.shape) == (None, 14, 14, 128)
+        assert tuple(x.shape) == (None, 28, 28, 128)
         skip_layer.append(x)
 
         x = addNpass_maxpooling(x)
-        assert tuple(x.shape) == (None, 7, 7, 128)
+        assert tuple(x.shape) == (None, 14, 14, 128)
 
         x = addNpass_conv_block(x, 256)
+        assert tuple(x.shape) == (None, 14, 14, 256)
+        skip_layer.append(x)
+
+        x = addNpass_maxpooling(x)
         assert tuple(x.shape) == (None, 7, 7, 256)
+
         x = addNpass_conv_block(x, 512)
         assert tuple(x.shape) == (None, 7, 7, 512)
-        x = addNpass_conv_block(x, 256)
-        assert tuple(x.shape) == (None, 7, 7, 256)
+        x = addNpass_conv_block(x, 1024)
+        assert tuple(x.shape) == (None, 7, 7, 1024)
+        x = addNpass_conv_block(x, 512)
+        assert tuple(x.shape) == (None, 7, 7, 512)
 
         return x, skip_layer
 
     def add_up_path(self, x, skip_layers):
-        x = addNpass_transpose_conv2d(x, 128, 2)
-        assert tuple(x.shape) == (None, 14, 14, 128)
-
-        x = tf.keras.layers.Concatenate()([x, skip_layers[-1]])
+        x = addNpass_transpose_conv2d(x, 256, 2)
         assert tuple(x.shape) == (None, 14, 14, 256)
 
-        x = addNpass_conv_block(x, 128)
-        assert tuple(x.shape) == (None, 14, 14, 128)
+        x = tf.keras.layers.Concatenate()([x, skip_layers[-1]])
+        assert tuple(x.shape) == (None, 14, 14, 512)
 
-        x = addNpass_transpose_conv2d(x, 64, 2)
-        assert tuple(x.shape) == (None, 28, 28, 64)
+        x = addNpass_conv_block(x, 256)
+        assert tuple(x.shape) == (None, 14, 14, 256)
 
-        x = tf.keras.layers.Concatenate()([x, skip_layers[-2]])
+        x = addNpass_transpose_conv2d(x, 128, 2)
         assert tuple(x.shape) == (None, 28, 28, 128)
 
-        x = addNpass_conv_block(x, 64)
-        assert tuple(x.shape) == (None, 28, 28, 64)
+        x = tf.keras.layers.Concatenate()([x, skip_layers[-2]])
+        assert tuple(x.shape) == (None, 28, 28, 256)
+
+        x = addNpass_conv_block(x, 128)
+        assert tuple(x.shape) == (None, 28, 28, 128)
         x = addNpass_conv_block(x, 1, BN=False)
         assert tuple(x.shape) == (None, 28, 28, 1)
 
